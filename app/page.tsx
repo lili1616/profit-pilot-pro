@@ -1,12 +1,11 @@
-'use client'; // 必须保留这一行，用于 Next.js 客户端运行
+'use client';
 
 import React, { useState } from 'react';
 
-export default function App() {
-  const [bulletPool, setBulletPool] = useState(0); // 纯利润子弹
-  const [returnedPrincipal, setReturnedPrincipal] = useState(0); // 已回笼本金
+export default function Home() {
+  const [bulletPool, setBulletPool] = useState(0); 
+  const [returnedPrincipal, setReturnedPrincipal] = useState(0); 
 
-  // 预设你的五支基金数据
   const [assets, setAssets] = useState([
     { id: 0, name: '🥇 易方达黄金', principal: 4000, profit: 0, limit: 200 },
     { id: 1, name: '🥈 国泰有色矿业', principal: 5000, profit: 0, limit: 200 },
@@ -39,22 +38,21 @@ export default function App() {
     const asset = assets[id];
     if (bulletPool < asset.limit) { alert("子弹不足！"); return; }
     setBulletPool(prev => prev - asset.limit);
-    alert(`【补仓指令】已从子弹库扣除 ${asset.limit} 元预算`);
+    alert(`【补仓指令】已扣除 ${asset.limit} 元子弹`);
   };
 
   return (
     <div style={{background: '#0a0a0a', color: '#d4af37', minHeight: '100vh', padding: '15px', fontFamily: 'sans-serif'}}>
       <h2 style={{textAlign: 'center', letterSpacing: '2px'}}>PROFIT PILOT 9.0</h2>
       
-      {/* 顶部：双资金看板 */}
       <div style={{display: 'flex', gap: '10px', marginBottom: '20px'}}>
         <div style={{flex: 1, border: '1px solid #00ff00', padding: '10px', borderRadius: '10px', textAlign: 'center', background: 'rgba(0,255,0,0.05)'}}>
           <div style={{fontSize: '12px', color: '#888'}}>子弹库(纯利)</div>
-          <div style={{fontSize: '20px', color: '#00ff00', fontWeight: 'bold'}}>{bulletPool} 元</div>
+          <div style={{fontSize: '20px', color: '#00ff00', fontWeight: 'bold'}}>{bulletPool}</div>
         </div>
         <div style={{flex: 1, border: '1px solid #d4af37', padding: '10px', borderRadius: '10px', textAlign: 'center', background: 'rgba(212,175,55,0.05)'}}>
-          <div style={{fontSize: '12px', color: '#888'}}>回流本金池</div>
-          <div style={{fontSize: '20px', color: '#d4af37', fontWeight: 'bold'}}>{returnedPrincipal} 元</div>
+          <div style={{fontSize: '12px', color: '#888'}}>回流本金</div>
+          <div style={{fontSize: '20px', color: '#d4af37', fontWeight: 'bold'}}>{returnedPrincipal}</div>
         </div>
       </div>
 
@@ -67,7 +65,7 @@ export default function App() {
 
         return (
           <div key={asset.id} style={{background: '#161616', border: '1px solid #333', borderRadius: '15px', padding: '15px', marginBottom: '15px'}}>
-            <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '10px'}}>
+            <div style={{display: 'flex', justifyContent: 'space-between'}}>
               <div>
                 <div style={{fontSize: '16px', fontWeight: 'bold', color: '#fff'}}>{asset.name}</div>
                 <div style={{fontSize: '11px', color: '#666'}}>初始本金: {asset.principal}</div>
@@ -75,7 +73,7 @@ export default function App() {
               <div style={{color: isGain ? '#ff4444' : '#00ff00', fontWeight: 'bold', fontSize: '18px'}}>{(rate*100).toFixed(1)}%</div>
             </div>
             
-            <div style={{display: 'flex', gap: '10px', marginBottom: '15px'}}>
+            <div style={{display: 'flex', gap: '10px', margin: '15px 0'}}>
               <div style={{flex: 1}}>
                 <label style={{fontSize: '11px', color: '#ff4444'}}>盈利(+):</label>
                 <input type="number" value={isGain ? absProfit : ''} onChange={(e) => updateVal(asset.id, 'gain', e.target.value)} style={{background: '#222', color: '#ff4444', border: 'none', width: '85%', padding: '10px', borderRadius: '5px'}} />
