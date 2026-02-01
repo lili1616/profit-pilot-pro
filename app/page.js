@@ -19,6 +19,9 @@ export default function Home() {
 
   const updateAsset = (id, type, val) => {
     const newAssets = [...assets];
+    // 输入互斥：填了盈利，亏损自动清空；反之亦然
+    if (type === 'gain') newAssets[id].loss = '';
+    if (type === 'loss') newAssets[id].gain = '';
     newAssets[id][type] = val;
     setAssets(newAssets);
   };
@@ -26,36 +29,40 @@ export default function Home() {
   const handleAction = (id) => {
     const a = assets[id];
     const b = a.principal;
-    const g = Number(a.gain) || 0;
-    const l = Number(a.loss) || 0;
-    const currentP = g > 0 ? g : (l > 0 ? -l : 0);
-    const ratio = currentP / b;
+    const g = parseFloat(a.gain) || 0;
+    const l = parseFloat(a.loss) || 0;
 
-    // 逻辑1：15% 止盈
-    if (ratio >= 0.15) {
+    // --- 核心战斗判定开始 ---
+    
+    // 1. 强制止损判定 (亏损金额 >= 本金的20%)
+    if (l >= b * 0.20) {
+      alert(`【🚨 极限止损警告】\n\n亏损已达 ${((l/b)*100).toFixed(1)}%！\n战况极其惨烈，已触及割肉红线。\n👉 指令：立即停止补仓，执行止损离场，保全余部！`);
+      return;
+    }
+
+    // 2. 止盈收割判定 (盈利金额 >= 本金的15%)
+    if (g >= b * 0.15) {
       const net = Math.floor(g * 0.4);
       const out = Math.floor(net * (1 + b / g));
       setBulletPool(prev => prev + net);
       setReturnedPrincipal(prev => prev + (out - net));
-      alert(`【🎯 精准收割指令】\n盈利达标！\n1. 利润入库：${net}元\n2. 本金回流：${out - net}元\n👉 App卖出填：${out}元`);
-    } 
-    // 逻辑2：20% 强制止损（新增提醒）
-    else if (ratio <= -0.20) {
-      alert(`【🚨 极限止损警告】\n亏损已达 ${ (ratio*100).toFixed(1) }%！\n已击穿防御底线，不再建议补仓！请考虑执行“割肉”以保全剩余兵力。`);
+      alert(`【🎯 精准收割指令】\n\n盈利达标！\n1. 利润入库：${net}元\n2. 本金回流：${out - net}元\n👉 请在App卖出填写：${out}元`);
+      return;
     }
-    // 逻辑3：5% 补仓
-    else if (ratio <= -0.05) {
+
+    // 3. 战术补仓判定 (亏损金额 >= 本金的5%)
+    if (l >= b * 0.05) {
       if (bulletPool < a.limit) {
-        alert(`【⚠️ 弹药枯竭】亏损达补仓线，但子弹库仅剩 ${bulletPool}元，无法支取 ${a.limit}元！`);
+        alert(`【⚠️ 弹药枯竭】\n\n亏损已达补仓线，但子弹库余额 (${bulletPool}元) 不足！\n👉 请先止盈其他项目换取子弹。`);
       } else {
         setBulletPool(prev => prev - a.limit);
-        alert(`【🛡️ 战术补仓】已从子弹库拨付 ${a.limit}元 执行防御补仓。`);
+        alert(`【🛡️ 战术补仓】\n\n亏损触发防线。已从子弹库拨付 ${a.limit}元 执行防御！`);
       }
-    } 
-    // 逻辑4：静默观望
-    else {
-      alert("【☕ 静默观望】战况波动未达触发线，继续保持装死。");
+      return;
     }
+
+    // 4. 默认状态：静默观望
+    alert("【☕ 静默观望】\n\n战况波动未达触发线（15%盈/5%跌）。\n👉 目前无需操作，保持阵位，继续观望。");
   };
 
   if (!isMounted) return null;
@@ -64,22 +71,21 @@ export default function Home() {
     <div style={{background: '#000', color: '#d4af37', minHeight: '100vh', padding: '15px', fontFamily: 'sans-serif'}}>
       <h2 style={{textAlign: 'center', color: '#fff', letterSpacing: '2px'}}>PROFIT PILOT 9.0</h2>
       
-      {/* 顶部池子：现在可以手动修改数据 */}
       <div style={{display: 'flex', gap: '10px', marginBottom: '20px'}}>
         <div style={{flex: 1, border: '2px solid #0f0', padding: '10px', textAlign: 'center', borderRadius: '10px'}}>
           <div style={{fontSize: '11px', color: '#888'}}>子弹库(纯利)</div>
-          <input type="number" value={bulletPool} onChange={(e)=>setBulletPool(Number(e.target.value))} style={{width:'80%', background:'transparent', color:'#0f0', border:'none', textAlign:'center', fontSize:'22px', fontWeight:'bold'}} />
+          <input type="number" value={bulletPool} onChange={(e)=>setBulletPool(parseFloat(e.target.value)||0)} style={{width:'80%', background:'transparent', color:'#0f0', border:'none', textAlign:'center', fontSize:'22px', fontWeight:'bold'}} />
         </div>
         <div style={{flex: 1, border: '2px solid #d4af37', padding: '10px', textAlign: 'center', borderRadius: '10px'}}>
           <div style={{fontSize: '11px', color: '#888'}}>回流本金池</div>
-          <input type="number" value={returnedPrincipal} onChange={(e)=>setReturnedPrincipal(Number(e.target.value))} style={{width:'80%', background:'transparent', color:'#d4af37', border:'none', textAlign:'center', fontSize:'22px', fontWeight:'bold'}} />
+          <input type="number" value={returnedPrincipal} onChange={(e)=>setReturnedPrincipal(parseFloat(e.target.value)||0)} style={{width:'80%', background:'transparent', color:'#d4af37', border:'none', textAlign:'center', fontSize:'22px', fontWeight:'bold'}} />
         </div>
       </div>
 
       {assets.map((a) => {
-        const p = Number(a.gain) || (Number(a.loss) ? -Number(a.loss) : 0);
+        const p = (parseFloat(a.gain) || 0) - (parseFloat(a.loss) || 0);
         const percent = ((p / a.principal) * 100).toFixed(1);
-        const isStopLoss = (p / a.principal) <= -0.20;
+        const ratio = p / a.principal;
 
         return (
           <div key={a.id} style={{background: '#1a1a1a', border: '1px solid #333', padding: '15px', marginBottom: '15px', borderRadius: '12px'}}>
@@ -100,11 +106,11 @@ export default function Home() {
               onClick={() => handleAction(a.id)} 
               style={{
                 width: '100%', padding: '15px', 
-                background: isStopLoss ? '#ff4444' : '#d4af37', 
+                background: ratio <= -0.2 ? '#ff4444' : '#d4af37', 
                 color: '#000', border: 'none', fontWeight: 'bold', borderRadius: '8px', fontSize: '16px'
               }}
             >
-              {isStopLoss ? '🚨 触发止损警戒' : '执行战术指令'}
+              {ratio <= -0.2 ? '🚨 极限止损警告' : '执行战术指令'}
             </button>
           </div>
         );
