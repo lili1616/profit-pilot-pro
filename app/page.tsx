@@ -54,6 +54,58 @@ export default function ProfitPilotPro() {
     else if (percentValue <= -5 && percentValue > -20) {
       triggerTacticalRebalance(profitLossValue);
     }
+    // 静默观望 (-5% ~ +15%)
+    else {
+      // 不自动弹窗，仅在手动点击时触发
+    }
+  };
+
+  // ============ 静默观望 (-5% ~ +15%) ============
+  const triggerSilentObservation = () => {
+    setModalContent({
+      title: '☕ 静默观望 - 战线稳固',
+      message: `
+        目前波动处于正常区间（-5% ~ +15%），未达作战触发点。
+
+        📊 当前状态：
+        • 盈亏百分比：${percent >= 0 ? '+' : ''}${percent.toFixed(2)}%
+        • 盈亏金额：${profitLoss >= 0 ? '+' : ''}¥${profitLoss.toFixed(2)}
+        • 本金：¥${principal.toFixed(2)}
+        • 当前市值：¥${currentValue.toFixed(2)}
+
+        💡 战术建议：
+        建议保持阵位，继续静默观望。
+        等待盈利达到 +15% 或亏损达到 -5% 时再采取行动。
+
+        🎯 触发条件：
+        • 止盈信号：盈利 ≥ +15%
+        • 补仓信号：亏损 ≤ -5%
+        • 止损警告：亏损 ≤ -20%
+      `,
+      type: 'info',
+      actions: [
+        {
+          label: '继续观望',
+          onClick: () => setShowModal(false),
+        },
+      ],
+    });
+    setShowModal(true);
+  };
+
+  // ============ 手动执行战术指令 ============
+  const handleExecuteTacticalCommand = () => {
+    // 根据当前百分比判断并显示相应弹窗
+    if (percent <= -20) {
+      triggerExtremeLossWarning(profitLoss);
+    } else if (percent >= 15) {
+      triggerProfitTaking(profitLoss);
+    } else if (percent <= -5 && percent > -20) {
+      triggerTacticalRebalance(profitLoss);
+    } else {
+      // -5% ~ +15% 区间：静默观望
+      triggerSilentObservation();
+    }
   };
 
   // ============ 止盈逻辑 (15%) ============
@@ -467,6 +519,19 @@ export default function ProfitPilotPro() {
               >
                 重置
               </button>
+            </div>
+
+            {/* 执行战术指令按钮 */}
+            <div className="mt-6">
+              <button
+                onClick={handleExecuteTacticalCommand}
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-lg transition transform hover:scale-105 shadow-lg"
+              >
+                🎯 执行战术指令
+              </button>
+              <p className="text-center text-sm text-gray-400 mt-2">
+                点击获取当前战术建议（必有反馈）
+              </p>
             </div>
 
             {/* 说明文档 */}
